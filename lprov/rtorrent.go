@@ -47,6 +47,7 @@ func (r *Rtorrent) GetTorrents() []Torrent {
 		log.Fatal("error getting xmlrpc result")
 	}
 
+	// TODO: redo to subgroups
 	re := regexp.MustCompile(`(?m)^\s+Index\s+[0-9]+\s+String:\s+'([0-9A-Z]{40})'\s*$`)
 	results := re.FindAllStringSubmatch(string(output), -1)
 
@@ -57,12 +58,13 @@ func (r *Rtorrent) GetTorrents() []Torrent {
 }
 
 func (r *Rtorrent) Add(magnet string) bool {
+	var value int
+
 	output, err := run.Run2("xmlrpc", r.url(), "load.normal", "", magnet)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value int
 	value, err = getIntValue(output)
 	if err != nil {
 		log.Fatal(err)
@@ -72,43 +74,62 @@ func (r *Rtorrent) Add(magnet string) bool {
 }
 
 func getStrValue(b []byte) (string, error) {
-	re := regexp.MustCompile(`(?m)^\s+String:\s+'(.*)'\s+$`)
-	results := re.FindStringSubmatch(string(b))
-	if len(results) > 1 {
-		return results[1], nil
+	re := regexp.MustCompile(`String: '(?P<str>.*)'`)
+
+	matches := re.FindStringSubmatch(string(b))
+	names := re.SubexpNames()
+
+	for i, match := range matches {
+		switch names[i] {
+		case "str":
+			return match, nil
+		}
 	}
 	return "", fmt.Errorf("Command failed, invalid value returned")
 }
 
 func getIntValue(b []byte) (int, error) {
-	re := regexp.MustCompile(`(?m)^\s+Integer:\s+([0-9]+)\s+$`)
-	results := re.FindStringSubmatch(string(b))
-	if len(results) > 1 {
-		if s, err := strconv.Atoi(results[1]); err == nil {
-			return s, nil
+	re := regexp.MustCompile(`Integer: (?P<int>[0-9]+)`)
+
+	matches := re.FindStringSubmatch(string(b))
+	names := re.SubexpNames()
+
+	for i, match := range matches {
+		switch names[i] {
+		case "int":
+			if s, err := strconv.Atoi(match); err == nil {
+				return s, nil
+			}
 		}
 	}
 	return 0, fmt.Errorf("Command failed, invalid value returned")
 }
 
 func getInt64Value(b []byte) (int, error) {
-	re := regexp.MustCompile(`(?m)^\s+64-bit\s+integer:\s+([0-9]*)\s+$`)
-	results := re.FindStringSubmatch(string(b))
-	if len(results) > 1 {
-		if s, err := strconv.Atoi(results[1]); err == nil {
-			return s, nil
+	re := regexp.MustCompile(`64-bit integer: (?P<int>[0-9]*)`)
+
+	matches := re.FindStringSubmatch(string(b))
+	names := re.SubexpNames()
+
+	for i, match := range matches {
+		switch names[i] {
+		case "int":
+			if s, err := strconv.Atoi(match); err == nil {
+				return s, nil
+			}
 		}
 	}
 	return 0, fmt.Errorf("Command failed, invalid value returned")
 }
 
 func (t *Torrent) IsActive() bool {
+	var value int
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.is_active", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value int
 	value, err = getInt64Value(output)
 	if err != nil {
 		log.Fatal(err)
@@ -118,12 +139,13 @@ func (t *Torrent) IsActive() bool {
 }
 
 func (t *Torrent) IsComplete() bool {
+	var value int
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.complete", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value int
 	value, err = getInt64Value(output)
 	if err != nil {
 		log.Fatal(err)
@@ -133,12 +155,13 @@ func (t *Torrent) IsComplete() bool {
 }
 
 func (t *Torrent) Start() bool {
+	var value int
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.start", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value int
 	value, err = getIntValue(output)
 	if err != nil {
 		log.Fatal(err)
@@ -148,12 +171,13 @@ func (t *Torrent) Start() bool {
 }
 
 func (t *Torrent) Pause() bool {
+	var value int
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.pause", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value int
 	value, err = getIntValue(output)
 	if err != nil {
 		log.Fatal(err)
@@ -163,12 +187,13 @@ func (t *Torrent) Pause() bool {
 }
 
 func (t *Torrent) Stop() bool {
+	var value int
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.stop", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value int
 	value, err = getIntValue(output)
 	if err != nil {
 		log.Fatal(err)
@@ -178,12 +203,13 @@ func (t *Torrent) Stop() bool {
 }
 
 func (t *Torrent) Resume() bool {
+	var value int
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.resume", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value int
 	value, err = getIntValue(output)
 	if err != nil {
 		log.Fatal(err)
@@ -194,12 +220,13 @@ func (t *Torrent) Resume() bool {
 }
 
 func (t *Torrent) GetName() string {
+	var value string
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.name", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value string
 	value, err = getStrValue(output)
 	if err != nil {
 		log.Fatal(err)
@@ -209,12 +236,13 @@ func (t *Torrent) GetName() string {
 }
 
 func (t *Torrent) GetDirectory() string {
+	var value string
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.directory", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value string
 	value, err = getStrValue(output)
 	if err != nil {
 		log.Fatal(err)
@@ -224,12 +252,13 @@ func (t *Torrent) GetDirectory() string {
 }
 
 func (t *Torrent) GetSeeders() string {
+	var value string
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.connection_seed", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value string
 	value, err = getStrValue(output)
 	if err != nil {
 		log.Fatal(err)
@@ -239,12 +268,13 @@ func (t *Torrent) GetSeeders() string {
 }
 
 func (t *Torrent) GetLeechers() string {
+	var value string
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.connection_leech", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value string
 	value, err = getStrValue(output)
 	if err != nil {
 		log.Fatal(err)
@@ -254,12 +284,13 @@ func (t *Torrent) GetLeechers() string {
 }
 
 func (t *Torrent) GetBytesDone() int {
+	var value int
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.bytes_done", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value int
 	value, err = getInt64Value(output)
 	if err != nil {
 		log.Fatal(err)
@@ -269,12 +300,13 @@ func (t *Torrent) GetBytesDone() int {
 }
 
 func (t *Torrent) GetBytesSize() int {
+	var value int
+
 	output, err := run.Run2("xmlrpc", t.r.url(), "d.size_bytes", t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var value int
 	value, err = getInt64Value(output)
 	if err != nil {
 		log.Fatal(err)
