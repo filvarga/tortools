@@ -57,6 +57,12 @@ func (r *Rtorrent) GetTorrents() []Torrent {
 	return torrents
 }
 
+// TODO:
+// 1) StopAll(torrents []Torrent)
+// 2) StartAll(torrents []Torrent)
+// - if not finished etc.
+// 3) DeleteAll(torrents []Torrent)
+
 func (r *Rtorrent) Add(magnet string) bool {
 	var value int
 
@@ -70,7 +76,7 @@ func (r *Rtorrent) Add(magnet string) bool {
 		log.Fatal(err)
 	}
 
-	return value == 0
+	return 0 == value
 }
 
 func getStrValue(b []byte) (string, error) {
@@ -122,10 +128,54 @@ func getInt64Value(b []byte) (int, error) {
 	return 0, fmt.Errorf("Command failed, invalid value returned")
 }
 
-func (t *Torrent) IsActive() bool {
-	var value int
+func (t *Torrent) getStrValue(field string) string {
+	var (
+		output []byte
+		err    error
+		value  string
+	)
 
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.is_active", t.hash)
+	output, err = run.Run2("xmlrpc", t.r.url(), field, t.hash)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	value, err = getStrValue(output)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return value
+}
+
+func (t *Torrent) getIntValue(field string) int {
+	var (
+		output []byte
+		err    error
+		value  int
+	)
+
+	output, err = run.Run2("xmlrpc", t.r.url(), field, t.hash)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	value, err = getIntValue(output)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return value
+}
+
+func (t *Torrent) getInt64Value(field string) int {
+	var (
+		output []byte
+		err    error
+		value  int
+	)
+
+	output, err = run.Run2("xmlrpc", t.r.url(), field, t.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -135,184 +185,55 @@ func (t *Torrent) IsActive() bool {
 		log.Fatal(err)
 	}
 
-	return value == 0
+	return value
+}
+
+func (t *Torrent) IsActive() bool {
+	return 0 == t.getInt64Value("d.is_active")
 }
 
 func (t *Torrent) IsComplete() bool {
-	var value int
-
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.complete", t.hash)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	value, err = getInt64Value(output)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return value == 0
-}
-
-func (t *Torrent) Start() bool {
-	var value int
-
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.start", t.hash)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	value, err = getIntValue(output)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return value == 0
-}
-
-func (t *Torrent) Pause() bool {
-	var value int
-
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.pause", t.hash)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	value, err = getIntValue(output)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return value == 0
-}
-
-func (t *Torrent) Stop() bool {
-	var value int
-
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.stop", t.hash)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	value, err = getIntValue(output)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return value == 0
+	return 0 == t.getInt64Value("d.complete")
 }
 
 func (t *Torrent) Resume() bool {
-	var value int
+	return 0 == t.getIntValue("d.resume")
+}
 
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.resume", t.hash)
-	if err != nil {
-		log.Fatal(err)
-	}
+func (t *Torrent) Start() bool {
+	return 0 == t.getIntValue("d.start")
+}
 
-	value, err = getIntValue(output)
-	if err != nil {
-		log.Fatal(err)
-	}
+func (t *Torrent) Pause() bool {
+	return 0 == t.getIntValue("d.pause")
+}
 
-	return value == 0
-
+func (t *Torrent) Stop() bool {
+	return 0 == t.getIntValue("d.stop")
 }
 
 func (t *Torrent) GetName() string {
-	var value string
-
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.name", t.hash)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	value, err = getStrValue(output)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return value
+	return t.getStrValue("d.name")
 }
 
 func (t *Torrent) GetDirectory() string {
-	var value string
-
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.directory", t.hash)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	value, err = getStrValue(output)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return value
+	return t.getStrValue("d.directory")
 }
 
 func (t *Torrent) GetSeeders() string {
-	var value string
-
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.connection_seed", t.hash)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	value, err = getStrValue(output)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return value
+	return t.getStrValue("d.connection_seed")
 }
 
 func (t *Torrent) GetLeechers() string {
-	var value string
-
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.connection_leech", t.hash)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	value, err = getStrValue(output)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return value
+	return t.getStrValue("d.connection_leech")
 }
 
 func (t *Torrent) GetBytesDone() int {
-	var value int
-
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.bytes_done", t.hash)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	value, err = getInt64Value(output)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return value
+	return t.getInt64Value("d.bytes_done")
 }
 
 func (t *Torrent) GetBytesSize() int {
-	var value int
-
-	output, err := run.Run2("xmlrpc", t.r.url(), "d.size_bytes", t.hash)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	value, err = getInt64Value(output)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return value
+	return t.getInt64Value("d.size_bytes")
 }
 
 /* vim: set ts=2: */
