@@ -34,11 +34,13 @@ type Torrent struct {
 	hash string
 }
 
+type Torrents []Torrent
+
 func (r *Rtorrent) url() string {
 	return fmt.Sprintf("%s:%d", r.Host, r.Port)
 }
 
-func (r *Rtorrent) GetTorrents() []Torrent {
+func (r *Rtorrent) GetTorrents() Torrents {
 
 	var torrents []Torrent
 
@@ -55,6 +57,13 @@ func (r *Rtorrent) GetTorrents() []Torrent {
 		torrents = append(torrents, Torrent{r: *r, hash: results[i][1]})
 	}
 	return torrents
+}
+
+func (tr Torrents) Show() {
+	for _, t := range tr {
+		fmt.Printf("name: %s\t downloaded: %t\n",
+			t.GetName(), t.IsComplete())
+	}
 }
 
 // TODO:

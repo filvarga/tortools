@@ -260,13 +260,18 @@ func main() {
 	s.Title = flag.Arg(1)
 
 	if len(s.Title) == 0 {
-		torrents, _ := listAll(r)
-		for i := 0; i < len(torrents); i++ {
-			fmt.Printf("local: %t\tse: %s\tle: %s\tname: %s\n",
-				torrents[i].Local, torrents[i].Seeders,
-				torrents[i].Leechers, torrents[i].Name)
-		}
-		//print_usage()
+		torrents := r.GetTorrents()
+		torrents.Show()
+
+		/*
+			torrents, _ := listAll(r)
+			for i := 0; i < len(torrents); i++ {
+				fmt.Printf("local: %t\tse: %s\tle: %s\tname: %s\n",
+					torrents[i].Local, torrents[i].Seeders,
+					torrents[i].Leechers, torrents[i].Name)
+			}
+			//print_usage()
+		*/
 		return
 	}
 
