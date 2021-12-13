@@ -110,7 +110,7 @@ Array of 735 items:
   Index 106 String: 'd.downloads_max.set'
   Index 107 String: 'd.downloads_min'
   Index 108 String: 'd.downloads_min.set'
-  Index 109 String: 'd.erase'
+  Index 109 String: 'd.erase' (WORKS)
   Index 110 String: 'd.free_diskspace'
   Index 111 String: 'd.group'
   Index 112 String: 'd.group.name'
@@ -190,9 +190,9 @@ Array of 735 items:
   Index 186 String: 'd.tracker_numwant'
   Index 187 String: 'd.tracker_numwant.set'
   Index 188 String: 'd.tracker_size'
-  Index 189 String: 'd.try_close'
-  Index 190 String: 'd.try_start'
-  Index 191 String: 'd.try_stop'
+  Index 189 String: 'd.try_close' (WORKS)
+  Index 190 String: 'd.try_start' (WORKS)
+  Index 191 String: 'd.try_stop'  (WORKS)
   Index 192 String: 'd.up.choke_heuristics'
   Index 193 String: 'd.up.choke_heuristics.leech'
   Index 194 String: 'd.up.choke_heuristics.seed'
@@ -736,3 +736,4 @@ Array of 735 items:
   Index 732 String: 'view.sort'
   Index 733 String: 'view.sort_current'
   Index 734 String: 'view.sort_new'
+

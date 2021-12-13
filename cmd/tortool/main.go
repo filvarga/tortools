@@ -57,8 +57,17 @@ type Torrent struct {
 	Local      bool
 	Downloaded bool
 	Percent    float64
-	Seeders    string
-	Leechers   string
+	Seeders    int
+	Leechers   int
+}
+
+type Torrents []Torrent
+
+func (tr Torrents) show() {
+	for _, t := range tr {
+		fmt.Printf("local: %5t se: %4d le: %4d name: %s\n",
+			t.Local, t.Seeders, t.Leechers, t.Name)
+	}
 }
 
 func buildRegex(s rprov.Search) *regexp.Regexp {
@@ -88,8 +97,8 @@ func findFirst(r lprov.Rtorrent, s rprov.Search) (Torrent, error) {
 	return torrent, nil
 }
 
-func listAll(r lprov.Rtorrent) ([]Torrent, error) {
-	var torrents []Torrent
+func listAll(r lprov.Rtorrent) (Torrents, error) {
+	var torrents Torrents
 	local := r.GetTorrents()
 
 	for i := 0; i < len(local); i++ {
@@ -106,10 +115,9 @@ func listAll(r lprov.Rtorrent) ([]Torrent, error) {
 	}
 
 	return torrents, nil
-
 }
 
-func findAll(r lprov.Rtorrent, s rprov.Search) ([]Torrent, error) {
+func findAll(r lprov.Rtorrent, s rprov.Search) (Torrents, error) {
 	var torrents []Torrent
 
 	local := r.GetTorrents()
@@ -131,7 +139,6 @@ func findAll(r lprov.Rtorrent, s rprov.Search) ([]Torrent, error) {
 		}
 	}
 
-	return torrents, nil
 	remote := s.GetTorrents()
 
 	for i := 0; i < len(remote); i++ {
@@ -222,70 +229,44 @@ func deploy() {
 }
 
 func print_usage() {
-	fmt.Fprintf(os.Stderr, "Usage of %s: <show|other> <list|download> <title>\n",
+	fmt.Fprintf(os.Stderr, "Usage of %s: <list>|<<find|get> <title>>\n",
 		os.Args[0])
 	flag.PrintDefaults()
 }
 
 func main() {
 
-	s := rprov.Search{}
-	substr := []string{}
-
-	flag.IntVar(&s.Season, "s", 1, "Season")
-	flag.IntVar(&s.Episode, "e", 1, "Episode")
-	flag.BoolVar(&s.TVShow, "show", false, "TV Show")
-
-	p480 := flag.Bool("480p", false, "")
-	p720 := flag.Bool("720p", false, "")
-	p1080 := flag.Bool("1080p", false, "")
-
-	flag.Parse()
-
-	if *p480 {
-		substr = append(substr, "480p")
-	}
-	if *p720 {
-		substr = append(substr, "720p")
-	}
-	if *p1080 {
-		substr = append(substr, "1080p")
-	}
-
 	r := lprov.Rtorrent{
 		Host: "localhost",
 		Port: 80,
 	}
 
+	s := rprov.Search{}
+
+	flag.IntVar(&s.Season, "s", 1, "Season")
+	flag.IntVar(&s.Episode, "e", 1, "Episode")
+	flag.BoolVar(&s.TVShow, "show", false, "TV Show")
+
+	flag.Parse()
+
 	s.Title = flag.Arg(1)
-
-	if len(s.Title) == 0 {
-		torrents := r.GetTorrents()
-		torrents.Show()
-
-		/*
-			torrents, _ := listAll(r)
-			for i := 0; i < len(torrents); i++ {
-				fmt.Printf("local: %t\tse: %s\tle: %s\tname: %s\n",
-					torrents[i].Local, torrents[i].Seeders,
-					torrents[i].Leechers, torrents[i].Name)
-			}
-			//print_usage()
-		*/
-		return
-	}
 
 	switch flag.Arg(0) {
 	default:
 		print_usage()
 	case "list":
-		torrents, _ := findAll(r, s)
-		for i := 0; i < len(torrents); i++ {
-			fmt.Printf("local: %t\tse: %s\tle: %s\tname: %s\n",
-				torrents[i].Local, torrents[i].Seeders,
-				torrents[i].Leechers, torrents[i].Name)
+		torrents, _ := listAll(r)
+		torrents.show()
+	case "find":
+		if len(s.Title) == 0 {
+			print_usage()
 		}
-	case "download":
+		torrents, _ := findAll(r, s)
+		torrents.show()
+	case "get":
+		if len(s.Title) == 0 {
+			print_usage()
+		}
 	}
 }
 

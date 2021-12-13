@@ -49,28 +49,51 @@ func (r *Rtorrent) GetTorrents() Torrents {
 		log.Fatal("error getting xmlrpc result")
 	}
 
-	// TODO: redo to subgroups
-	re := regexp.MustCompile(`(?m)^\s+Index\s+[0-9]+\s+String:\s+'([0-9A-Z]{40})'\s*$`)
-	results := re.FindAllStringSubmatch(string(output), -1)
+	re := regexp.MustCompile(`String: '(?P<str>[0-9A-Z]{40})'`)
 
-	for i := 0; i < len(results); i++ {
-		torrents = append(torrents, Torrent{r: *r, hash: results[i][1]})
+	matches := re.FindAllSubmatch(output, -1)
+	names := re.SubexpNames()
+
+	for _, match := range matches {
+		for i, group := range match {
+			switch names[i] {
+			case "str":
+				torrents = append(torrents, Torrent{r: *r, hash: string(group)})
+			}
+		}
 	}
 	return torrents
 }
 
-func (tr Torrents) Show() {
+func (tr Torrents) Resume() {
 	for _, t := range tr {
-		fmt.Printf("name: %s\t downloaded: %t\n",
-			t.GetName(), t.IsComplete())
+		t.Resume()
 	}
 }
 
-// TODO:
-// 1) StopAll(torrents []Torrent)
-// 2) StartAll(torrents []Torrent)
-// - if not finished etc.
-// 3) DeleteAll(torrents []Torrent)
+func (tr Torrents) Delete() {
+	for _, t := range tr {
+		t.Delete()
+	}
+}
+
+func (tr Torrents) Start() {
+	for _, t := range tr {
+		t.Start()
+	}
+}
+
+func (tr Torrents) Pause() {
+	for _, t := range tr {
+		t.Pause()
+	}
+}
+
+func (tr Torrents) Stop() {
+	for _, t := range tr {
+		t.Stop()
+	}
+}
 
 func (r *Rtorrent) Add(magnet string) bool {
 	var value int
@@ -88,16 +111,23 @@ func (r *Rtorrent) Add(magnet string) bool {
 	return 0 == value
 }
 
+func str2Int(str string, def int) int {
+	if i, err := strconv.Atoi(str); err == nil {
+		return i
+	}
+	return def
+}
+
 func getStrValue(b []byte) (string, error) {
 	re := regexp.MustCompile(`String: '(?P<str>.*)'`)
 
-	matches := re.FindStringSubmatch(string(b))
+	matches := re.FindSubmatch(b)
 	names := re.SubexpNames()
 
-	for i, match := range matches {
+	for i, group := range matches {
 		switch names[i] {
 		case "str":
-			return match, nil
+			return string(group), nil
 		}
 	}
 	return "", fmt.Errorf("Command failed, invalid value returned")
@@ -106,13 +136,13 @@ func getStrValue(b []byte) (string, error) {
 func getIntValue(b []byte) (int, error) {
 	re := regexp.MustCompile(`Integer: (?P<int>[0-9]+)`)
 
-	matches := re.FindStringSubmatch(string(b))
+	matches := re.FindSubmatch(b)
 	names := re.SubexpNames()
 
-	for i, match := range matches {
+	for i, group := range matches {
 		switch names[i] {
 		case "int":
-			if s, err := strconv.Atoi(match); err == nil {
+			if s, err := strconv.Atoi(string(group)); err == nil {
 				return s, nil
 			}
 		}
@@ -123,13 +153,13 @@ func getIntValue(b []byte) (int, error) {
 func getInt64Value(b []byte) (int, error) {
 	re := regexp.MustCompile(`64-bit integer: (?P<int>[0-9]*)`)
 
-	matches := re.FindStringSubmatch(string(b))
+	matches := re.FindSubmatch(b)
 	names := re.SubexpNames()
 
-	for i, match := range matches {
+	for i, group := range matches {
 		switch names[i] {
 		case "int":
-			if s, err := strconv.Atoi(match); err == nil {
+			if s, err := strconv.Atoi(string(group)); err == nil {
 				return s, nil
 			}
 		}
@@ -209,6 +239,10 @@ func (t *Torrent) Resume() bool {
 	return 0 == t.getIntValue("d.resume")
 }
 
+func (t *Torrent) Delete() bool {
+	return 0 == t.getIntValue("d.erase")
+}
+
 func (t *Torrent) Start() bool {
 	return 0 == t.getIntValue("d.start")
 }
@@ -229,12 +263,12 @@ func (t *Torrent) GetDirectory() string {
 	return t.getStrValue("d.directory")
 }
 
-func (t *Torrent) GetSeeders() string {
-	return t.getStrValue("d.connection_seed")
+func (t *Torrent) GetSeeders() int {
+	return str2Int(t.getStrValue("d.connection_seed"), -1)
 }
 
-func (t *Torrent) GetLeechers() string {
-	return t.getStrValue("d.connection_leech")
+func (t *Torrent) GetLeechers() int {
+	return str2Int(t.getStrValue("d.connection_leech"), -1)
 }
 
 func (t *Torrent) GetBytesDone() int {

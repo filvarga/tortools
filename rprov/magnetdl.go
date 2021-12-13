@@ -18,6 +18,7 @@ package rprov
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -34,8 +35,8 @@ type Torrent struct {
 	Title    string
 	Link     string
 	Magnet   string
-	Seeders  string
-	Leechers string
+	Seeders  int
+	Leechers int
 }
 
 func get(title string) []Torrent {
@@ -72,14 +73,18 @@ func get(title string) []Torrent {
 					}
 				})
 			case "s":
-				torrent.Seeders = td.Text()
+				if i, err := strconv.Atoi(td.Text()); err == nil {
+					torrent.Seeders = i
+				}
 			case "l":
-				torrent.Leechers = td.Text()
+				if i, err := strconv.Atoi(td.Text()); err == nil {
+					torrent.Leechers = i
+				}
 			}
 		})
 
 		if len(torrent.Title) > 0 && len(torrent.Magnet) > 0 &&
-			len(torrent.Seeders) > 0 {
+			torrent.Seeders > 0 {
 			torrents = append(torrents, torrent)
 		}
 	})
