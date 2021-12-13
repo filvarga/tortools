@@ -95,10 +95,29 @@ func (tr Torrents) Stop() {
 	}
 }
 
+func (tr Torrents) FindAll(re *regexp.Regexp) Torrents {
+	var torrents Torrents
+	for _, t := range tr {
+		if re.MatchString(t.GetName()) {
+			torrents = append(torrents, t)
+		}
+	}
+	return torrents
+}
+
+func (tr Torrents) FindFirst(re *regexp.Regexp) *Torrent {
+	for _, t := range tr {
+		if re.MatchString(t.GetName()) {
+			return &t
+		}
+	}
+	return nil
+}
+
 func (r *Rtorrent) Add(magnet string) bool {
 	var value int
 
-	output, err := run.Run2("xmlrpc", r.url(), "load.normal", "", magnet)
+	output, err := run.Run2("xmlrpc", r.url(), "load.start", "", magnet)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,7 +130,7 @@ func (r *Rtorrent) Add(magnet string) bool {
 	return 0 == value
 }
 
-func str2Int(str string, def int) int {
+func Str2Int(str string, def int) int {
 	if i, err := strconv.Atoi(str); err == nil {
 		return i
 	}
@@ -264,11 +283,11 @@ func (t *Torrent) GetDirectory() string {
 }
 
 func (t *Torrent) GetSeeders() int {
-	return str2Int(t.getStrValue("d.connection_seed"), -1)
+	return Str2Int(t.getStrValue("d.connection_seed"), -1)
 }
 
 func (t *Torrent) GetLeechers() int {
-	return str2Int(t.getStrValue("d.connection_leech"), -1)
+	return Str2Int(t.getStrValue("d.connection_leech"), -1)
 }
 
 func (t *Torrent) GetBytesDone() int {

@@ -25,7 +25,7 @@ import (
 )
 
 type Search struct {
-	TVShow  bool
+	TV      bool
 	Title   string
 	Season  int
 	Episode int
@@ -38,6 +38,8 @@ type Torrent struct {
 	Seeders  int
 	Leechers int
 }
+
+type Torrents []Torrent
 
 func get(title string) []Torrent {
 	var torrents []Torrent
@@ -93,7 +95,7 @@ func get(title string) []Torrent {
 }
 
 func (s *Search) GetTorrents() []Torrent {
-	if s.TVShow {
+	if s.TV {
 		return get(fmt.Sprintf("%s s%02de%02d", s.Title,
 			s.Season, s.Episode))
 	} else {
