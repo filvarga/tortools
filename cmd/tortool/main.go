@@ -106,12 +106,14 @@ func deploy() {
 
 func print_usage() {
 	usage := `Usage:
-%[1]s	[f ...] download purge|list|(del <title> [S] [E])
-%[1]s	[f ...] search find|get <title> [S] [E]
-%[1]s [f ...] find all|first <title> [S] [E]
-%[1]s	[f ...] get all|first <title> [S] [E]
-%[1]s	[f ...] del all|first <title> [S] [E]
-%[1]s [f ...] run
+%[1]s	download purge
+%[1]s	download list
+%[1]s [-tag <tag> ...] download del <title> [season] [episode]
+%[1]s	[-tag <tag> ...] search find|get <title> [season] [episode]
+%[1]s [-tag <tag> ...] find all|first <title> [season] [episode]
+%[1]s	[-tag <tag> ...] get all|first <title> [season] [episode]
+%[1]s	[-tag <tag> ...] del all|first <title> [season] [episode]
+%[1]s run
 
 Flags:
 `
@@ -137,14 +139,14 @@ func build_search() search.Search {
 		Season:  1,
 		Episode: 1,
 	}
-	s.Title = flag.Arg(1)
+	s.Title = flag.Arg(2)
 	if len(s.Title) == 0 {
 		print_usage()
 	}
-	if len(flag.Arg(2)) > 0 {
-		s.Season = download.Str2Int(flag.Arg(2), -1)
-		if len(flag.Arg(3)) > 0 {
-			s.Episode = download.Str2Int(flag.Arg(3), -1)
+	if len(flag.Arg(3)) > 0 {
+		s.Season = download.Str2Int(flag.Arg(3), -1)
+		if len(flag.Arg(4)) > 0 {
+			s.Episode = download.Str2Int(flag.Arg(4), -1)
 		}
 		if s.Season == -1 || s.Episode == -1 {
 			print_usage()
@@ -170,25 +172,13 @@ func main() {
 	switch flag.Arg(0) {
 	default:
 		print_usage()
-	case "find":
-		ListB(r, build_search(), tags)
-	case "list":
-		ListAllDownloads(r)
-	case "get":
-		m := FindFirstB(r, build_search(), tags)
-		fmt.Println(m.String())
-		m.Get(r)
-	}
-
-	switch flag.Arg(0) {
-	default:
-		print_usage()
 	case "download":
 		switch flag.Arg(1) {
 		default:
 			print_usage()
 		case "purge":
 		case "list":
+			ListAllDownloads(r)
 		case "del":
 		}
 	case "search":
@@ -203,13 +193,19 @@ func main() {
 		default:
 			print_usage()
 		case "first":
+			m := FindFirstB(r, build_search(), tags)
+			fmt.Println(m.String())
 		case "all":
+			ListB(r, build_search(), tags)
 		}
 	case "get":
 		switch flag.Arg(1) {
 		default:
 			print_usage()
 		case "first":
+			m := FindFirstB(r, build_search(), tags)
+			fmt.Println(m.String())
+			m.Get(r)
 		case "all":
 		}
 	case "del":
