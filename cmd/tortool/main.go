@@ -20,184 +20,16 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strings"
 
-	"github.com/filvarga/tortools/lprov"
-	"github.com/filvarga/tortools/rprov"
+	"github.com/filvarga/tortools/download"
 	"github.com/filvarga/tortools/run"
+	"github.com/filvarga/tortools/search"
 )
 
 var (
 	context = ""
 )
-
-type Torrent struct {
-	Name       string
-	Local      bool
-	Downloaded bool
-	Percent    float64
-	Seeders    int
-	Leechers   int
-	local      *lprov.Torrent
-	remote     *rprov.Torrent
-}
-
-type Torrents []Torrent
-
-func (t *Torrent) get(r lprov.Rtorrent) {
-	if !t.Local {
-		r.Add(t.remote.Magnet)
-	}
-}
-
-func (t *Torrent) show() {
-	fmt.Printf("local: %5t se: %4d le: %4d name: %s\n",
-		t.Local, t.Seeders, t.Leechers, t.Name)
-}
-
-func (tr Torrents) show() {
-	for _, t := range tr {
-		t.show()
-	}
-}
-
-func convertl(t lprov.Torrent) *Torrent {
-	percent := 100 / float64(t.GetBytesSize()) *
-		float64(t.GetBytesDone())
-	return &Torrent{
-		Name:       t.GetName(),
-		Local:      true,
-		Downloaded: t.IsComplete(),
-		Percent:    percent,
-		Seeders:    t.GetSeeders(),
-		Leechers:   t.GetLeechers(),
-		local:      &t,
-	}
-}
-
-func convertr(t rprov.Torrent) *Torrent {
-	return &Torrent{
-		Name:       t.Title,
-		Local:      false,
-		Downloaded: false,
-		Percent:    0.0,
-		Seeders:    t.Seeders,
-		Leechers:   t.Leechers,
-		remote:     &t,
-	}
-}
-
-func convertlTorrents(tr lprov.Torrents) Torrents {
-	var torrents Torrents
-	for _, t := range tr {
-		torrents = append(torrents, *convertl(t))
-	}
-	return torrents
-}
-
-func convertrTorrents(tr rprov.Torrents) Torrents {
-	var torrents Torrents
-	for _, t := range tr {
-		torrents = append(torrents, *convertr(t))
-	}
-	return torrents
-}
-
-func contains(s string, substrs []string) bool {
-	s = strings.ToLower(s)
-	for _, substr := range substrs {
-		if !strings.Contains(s, substr) {
-			return false
-		}
-	}
-	return true
-}
-
-func listAllLocal(r lprov.Rtorrent) {
-	torrents := convertlTorrents(r.GetTorrents())
-	torrents.show()
-}
-
-func findAllLocal(r lprov.Rtorrent, s rprov.Search) lprov.Torrents {
-	local := r.GetTorrents()
-	if s.TV {
-		return local.FindAll(regexp.MustCompile(
-			fmt.Sprintf(`(?i)%s.*?s%02de%02d`,
-				s.Title, s.Season, s.Episode)))
-	} else {
-		return local.FindAll(regexp.MustCompile(
-			fmt.Sprintf(`(?i)%s`, s.Title)))
-	}
-}
-
-func findAllRemote(s rprov.Search) rprov.Torrents {
-	return s.GetTorrents()
-}
-
-func findAll(r lprov.Rtorrent, s rprov.Search) Torrents {
-
-	var torrents Torrents
-
-	for _, t := range convertlTorrents(findAllLocal(r, s)) {
-		torrents = append(torrents, t)
-	}
-
-	for _, t := range convertrTorrents(findAllRemote(s)) {
-		torrents = append(torrents, t)
-	}
-
-	return torrents
-}
-
-func findAllA(r lprov.Rtorrent, s rprov.Search, substrs []string) Torrents {
-
-	var torrents Torrents
-
-	if len(substrs) == 0 {
-		return findAll(r, s)
-	}
-
-	for _, t := range findAll(r, s) {
-		if contains(t.Name, substrs) {
-			torrents = append(torrents, t)
-		}
-	}
-	return torrents
-}
-
-func findFirst(r lprov.Rtorrent, s rprov.Search) *Torrent {
-
-	local := findAllLocal(r, s)
-	if len(local) > 0 {
-		return convertl(local[0])
-	}
-
-	remote := findAllRemote(s)
-	if len(remote) > 0 {
-		return convertr(remote[0])
-	}
-	return nil
-}
-
-func findFirstA(r lprov.Rtorrent, s rprov.Search, substrs []string) *Torrent {
-	if len(substrs) > 0 {
-		for _, t := range convertlTorrents(findAllLocal(r, s)) {
-			if contains(t.Name, substrs) {
-				return &t
-			}
-		}
-
-		for _, t := range convertrTorrents(findAllRemote(s)) {
-			if contains(t.Name, substrs) {
-				return &t
-			}
-		}
-	} else {
-		return findFirst(r, s)
-	}
-	return nil
-}
 
 type user struct {
 	idu int
@@ -273,73 +105,121 @@ func deploy() {
 }
 
 func print_usage() {
-	fmt.Fprintf(os.Stderr, "Usage of %s: <list>|<<find|get> <title> [Season] [Episode]>\n",
+	usage := `Usage:
+%[1]s	[f ...] download purge|list|(del <title> [S] [E])
+%[1]s	[f ...] search find|get <title> [S] [E]
+%[1]s [f ...] find all|first <title> [S] [E]
+%[1]s	[f ...] get all|first <title> [S] [E]
+%[1]s	[f ...] del all|first <title> [S] [E]
+%[1]s [f ...] run
+
+Flags:
+`
+	fmt.Fprintf(os.Stderr, usage,
 		os.Args[0])
 	flag.PrintDefaults()
 	os.Exit(1)
 }
 
-type arraySubstrs []string
+type arrayTags []string
 
-func (i *arraySubstrs) String() string {
+func (i *arrayTags) String() string {
 	return "string..."
 }
 
-func (i *arraySubstrs) Set(value string) error {
+func (i *arrayTags) Set(value string) error {
 	*i = append(*i, strings.ToLower(value))
 	return nil
 }
 
+func build_search() search.Search {
+	s := search.Search{
+		Season:  1,
+		Episode: 1,
+	}
+	s.Title = flag.Arg(1)
+	if len(s.Title) == 0 {
+		print_usage()
+	}
+	if len(flag.Arg(2)) > 0 {
+		s.Season = download.Str2Int(flag.Arg(2), -1)
+		if len(flag.Arg(3)) > 0 {
+			s.Episode = download.Str2Int(flag.Arg(3), -1)
+		}
+		if s.Season == -1 || s.Episode == -1 {
+			print_usage()
+		}
+		s.Type = search.TV
+	}
+	return s
+}
+
 func main() {
 
-	r := lprov.Rtorrent{
-		Host: "localhost",
-		Port: 80,
-	}
+	var (
+		tags arrayTags
+		r    download.Rtorrent
+	)
 
-	s := rprov.Search{}
-
-	var substrs arraySubstrs
-
-	flag.Var(&substrs, "contains", "Contains")
-	flag.BoolVar(&s.TV, "tv", false, "TV Show")
+	flag.StringVar(&r.Host, "host", "localhost", "Provider host")
+	flag.IntVar(&r.Port, "port", 80, "Provider port")
+	flag.Var(&tags, "tag", "Contains tag")
 
 	flag.Parse()
-
-	s.Title = flag.Arg(1)
 
 	switch flag.Arg(0) {
 	default:
 		print_usage()
-	case "list":
-		listAllLocal(r)
 	case "find":
-		if len(s.Title) == 0 {
-			print_usage()
-		}
-		if s.TV {
-			s.Season = lprov.Str2Int(flag.Arg(2), -1)
-			s.Episode = lprov.Str2Int(flag.Arg(3), -1)
-			if s.Season == -1 || s.Episode == -1 {
-				print_usage()
-			}
-		}
-		torrents := findAllA(r, s, substrs)
-		torrents.show()
+		ListB(r, build_search(), tags)
+	case "list":
+		ListAllDownloads(r)
 	case "get":
-		if len(s.Title) == 0 {
+		m := FindFirstB(r, build_search(), tags)
+		fmt.Println(m.String())
+		m.Get(r)
+	}
+
+	switch flag.Arg(0) {
+	default:
+		print_usage()
+	case "download":
+		switch flag.Arg(1) {
+		default:
 			print_usage()
+		case "purge":
+		case "list":
+		case "del":
 		}
-		if s.TV {
-			s.Season = lprov.Str2Int(flag.Arg(2), -1)
-			s.Episode = lprov.Str2Int(flag.Arg(3), -1)
-			if s.Season == -1 || s.Episode == -1 {
-				print_usage()
-			}
+	case "search":
+		switch flag.Arg(1) {
+		default:
+			print_usage()
+		case "find":
+		case "get":
 		}
-		torrent := findFirstA(r, s, substrs)
-		torrent.show()
-		torrent.get(r)
+	case "find":
+		switch flag.Arg(1) {
+		default:
+			print_usage()
+		case "first":
+		case "all":
+		}
+	case "get":
+		switch flag.Arg(1) {
+		default:
+			print_usage()
+		case "first":
+		case "all":
+		}
+	case "del":
+		switch flag.Arg(1) {
+		default:
+			print_usage()
+		case "first":
+		case "all":
+		}
+	case "run":
 	}
 }
 

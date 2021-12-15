@@ -1,5 +1,25 @@
 Result:
 
+First argument is all the time hash !!!
+
+for example:
+  xmlrpc localhost download_list "" "active"
+
+  Index  0 String: 'main'
+  Index  1 String: 'default'
+  Index  2 String: 'name'
+  Index  3 String: 'active'
+  Index  4 String: 'started'
+  Index  5 String: 'stopped'
+  Index  6 String: 'complete'
+  Index  7 String: 'incomplete'
+  Index  8 String: 'hashing'
+  Index  9 String: 'seeding'
+  Index 10 String: 'leeching'
+
+  - here we have empty hash, it doesn't really matter
+  - it just has to be there, valid or empty
+
 Array of 735 items:
   Index  0 String: 'system.listMethods'
   Index  1 String: 'system.methodExist'
@@ -58,8 +78,8 @@ Array of 735 items:
   Index 54 String: 'd.accepting_seeders'
   Index 55 String: 'd.accepting_seeders.disable'
   Index 56 String: 'd.accepting_seeders.enable'
-  Index 57 String: 'd.base_filename'
-  Index 58 String: 'd.base_path'
+  Index 57 String: 'd.base_filename' (WORKS)
+  Index 58 String: 'd.base_path' (WORKS)
   Index 59 String: 'd.bitfield'
   Index 60 String: 'd.bytes_done'
   Index 61 String: 'd.check_hash'
@@ -135,7 +155,7 @@ Array of 735 items:
   Index 131 String: 'd.left_bytes'
   Index 132 String: 'd.load_date'
   Index 133 String: 'd.loaded_file'
-  Index 134 String: 'd.local_id'
+  Index 134 String: 'd.local_id' (WORKS) - ???
   Index 135 String: 'd.local_id_html'
   Index 136 String: 'd.max_file_size'
   Index 137 String: 'd.max_file_size.set'
@@ -145,7 +165,7 @@ Array of 735 items:
   Index 141 String: 'd.mode'
   Index 142 String: 'd.multicall.filtered'
   Index 143 String: 'd.multicall2'
-  Index 144 String: 'd.name'
+  Index 144 String: 'd.name' (WORKS)
   Index 145 String: 'd.open'
   Index 146 String: 'd.pause'
   Index 147 String: 'd.peer_exchange'
@@ -178,10 +198,10 @@ Array of 735 items:
   Index 174 String: 'd.stop'
   Index 175 String: 'd.throttle_name'
   Index 176 String: 'd.throttle_name.set'
-  Index 177 String: 'd.tied_to_file'
+  Index 177 String: 'd.tied_to_file' (WORKS)
   Index 178 String: 'd.tied_to_file.set'
-  Index 179 String: 'd.timestamp.finished'
-  Index 180 String: 'd.timestamp.started'
+  Index 179 String: 'd.timestamp.finished' (WORKS)
+  Index 180 String: 'd.timestamp.started' (WORKS)
   Index 181 String: 'd.tracker.insert'
   Index 182 String: 'd.tracker.send_scrape'
   Index 183 String: 'd.tracker_announce'
