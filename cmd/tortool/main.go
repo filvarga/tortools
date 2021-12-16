@@ -176,45 +176,93 @@ func main() {
 		default:
 			printUsage()
 		case "purge":
+			// purge all downloads
+			m := ListAllDownloads(r)
+			m.Show()
+			m.Del()
 		case "list":
-			ListAllDownloads(r)
+			// list all downloads
+			m := ListAllDownloads(r)
+			m.Show()
 		case "del":
+			// del all downloads matching search pattern
+			m := FindFirstDownloadB(r, buildSearch(), tags)
+			if m != nil {
+				m.Show()
+				m.Del()
+			}
 		}
 	case "search":
 		switch flag.Arg(1) {
 		default:
 			printUsage()
 		case "find":
+			// find all searches matching search pattern
+			m := FindTorrentsB(buildSearch(), tags)
+			m.Show()
 		case "get":
+			// get all searches matching search pattern
+			m := FindTorrentsB(buildSearch(), tags)
+			m.Get(r)
+			m.Show()
 		}
 	case "find":
 		switch flag.Arg(1) {
 		default:
 			printUsage()
 		case "first":
+			// find first managed media matching search pattern
+			// TODO: managed media layer
 			m := FindFirstB(r, buildSearch(), tags)
-			fmt.Println(m.String())
+			if m != nil {
+				m.Show()
+			}
 		case "all":
-			ListB(r, buildSearch(), tags)
+			// find all managed media matching search pattern
+			// TODO: managed media layer
+			m := FindAllB(r, buildSearch(), tags)
+			m.Show()
 		}
 	case "get":
 		switch flag.Arg(1) {
 		default:
 			printUsage()
 		case "first":
+			// get first managed media matching search pattern
+			// TODO: managed media layer
 			m := FindFirstB(r, buildSearch(), tags)
-			fmt.Println(m.String())
-			m.Get(r)
+			if m != nil {
+				m.Get(r)
+				m.Show()
+			}
 		case "all":
+			// get all managed media matching search pattern
+			// TODO: managed media layer
+			m := FindAllB(r, buildSearch(), tags)
+			m.Get(r)
+			m.Show()
 		}
 	case "del":
 		switch flag.Arg(1) {
 		default:
 			printUsage()
 		case "first":
+			// del first managed media matching search pattern
+			// TODO: managed media layer
+			m := FindFirstDownloadB(r, buildSearch(), tags)
+			if m != nil {
+				m.Show()
+				m.Del()
+			}
 		case "all":
+			// del all managed media matching search pattern
+			// TODO: managed media layer
+			m := FindDownloadsB(r, buildSearch(), tags)
+			m.Show()
+			m.Del()
 		}
 	case "run":
+		// TODO: manage library
 	}
 }
 

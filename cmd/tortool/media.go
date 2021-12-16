@@ -44,6 +44,10 @@ func (m *Media) String() string {
 	}
 }
 
+func (m *Media) Show() {
+	fmt.Println(m.String())
+}
+
 func (m *Media) Get(r download.Rtorrent) bool {
 	if !m.Local {
 		d := r.AddDownload(m.torrent.Magnet)
@@ -56,6 +60,31 @@ func (m *Media) Get(r download.Rtorrent) bool {
 		m.download = d
 	}
 	return true
+}
+
+func (m *Media) Del() bool {
+	if m.Local {
+		return m.download.Delete()
+	}
+	return false
+}
+
+func (ms Medias) Show() {
+	for _, m := range ms {
+		m.Show()
+	}
+}
+
+func (ms Medias) Get(r download.Rtorrent) {
+	for _, m := range ms {
+		m.Get(r)
+	}
+}
+
+func (ms Medias) Del() {
+	for _, m := range ms {
+		m.Del()
+	}
 }
 
 func convertTorrent(t search.Torrent) *Media {
@@ -106,33 +135,60 @@ func findDownloads(r download.Rtorrent, s search.Search) download.Downloads {
 	}
 }
 
-func ListAllDownloads(r download.Rtorrent) {
-	for _, m := range convertDownloads(r.GetDownloads()) {
-		fmt.Println(m.String())
-	}
+func ListAllDownloads(r download.Rtorrent) Medias {
+	return convertDownloads(r.GetDownloads())
 }
 
-func ListA(r download.Rtorrent, s search.Search) {
-	for _, m := range FindA(r, s) {
-		fmt.Println(m.String())
-	}
-}
-
-func ListB(r download.Rtorrent, s search.Search, tags []string) {
-	for _, m := range FindB(r, s, tags) {
-		fmt.Println(m.String())
-	}
-}
-
-func FindTorrents(s search.Search) Medias {
+func FindTorrentsA(s search.Search) Medias {
 	return convertTorrents(findTorrents(s))
 }
 
-func FindDownloads(r download.Rtorrent, s search.Search) Medias {
+func FindTorrentsB(s search.Search, tags []string) Medias {
+	var ms Medias
+	for _, m := range FindTorrentsA(s) {
+		if contains(m.Name, tags) {
+			ms = append(ms, m)
+		}
+	}
+	return ms
+}
+
+func FindDownloadsA(r download.Rtorrent, s search.Search) Medias {
 	return convertDownloads(findDownloads(r, s))
 }
 
-func FindA(r download.Rtorrent, s search.Search) Medias {
+func FindDownloadsB(r download.Rtorrent, s search.Search, tags []string) Medias {
+	var ms Medias
+	for _, m := range FindDownloadsA(r, s) {
+		if contains(m.Name, tags) {
+			ms = append(ms, m)
+		}
+	}
+	return ms
+}
+
+func FindFirstDownloadA(r download.Rtorrent, s search.Search) *Media {
+	downloads := findDownloads(r, s)
+	if len(downloads) > 0 {
+		return convertDownload(downloads[0])
+	}
+	return nil
+}
+
+func FindFirstDownloadB(r download.Rtorrent, s search.Search, tags []string) *Media {
+	if len(tags) > 0 {
+		for _, m := range convertDownloads(findDownloads(r, s)) {
+			if contains(m.Name, tags) {
+				return &m
+			}
+		}
+	} else {
+		return FindFirstDownloadA(r, s)
+	}
+	return nil
+}
+
+func FindAllA(r download.Rtorrent, s search.Search) Medias {
 	var ms Medias
 	for _, t := range convertDownloads(findDownloads(r, s)) {
 		ms = append(ms, t)
@@ -143,9 +199,9 @@ func FindA(r download.Rtorrent, s search.Search) Medias {
 	return ms
 }
 
-func FindB(r download.Rtorrent, s search.Search, tags []string) Medias {
+func FindAllB(r download.Rtorrent, s search.Search, tags []string) Medias {
 	var ms Medias
-	for _, m := range FindA(r, s) {
+	for _, m := range FindAllA(r, s) {
 		if contains(m.Name, tags) {
 			ms = append(ms, m)
 		}
