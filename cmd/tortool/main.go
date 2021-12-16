@@ -47,11 +47,11 @@ type image struct {
 }
 
 func delContainer(name string) error {
-	return run.Run3(true, "docker", "rm", "-f", name)
+	return run.Exec3(true, "docker", "rm", "-f", name)
 }
 
 func (i *image) build(quiet bool, target string, u user) error {
-	return run.Run3(quiet, "docker", "build",
+	return run.Exec3(quiet, "docker", "build",
 		"--build-arg", fmt.Sprintf("IDU:%d", u.idu),
 		"--build-arg", fmt.Sprintf("IDG:%d", u.idg),
 		"--network", "host", "--target", target,
@@ -60,8 +60,8 @@ func (i *image) build(quiet bool, target string, u user) error {
 }
 
 func (i *image) deploy(quiet bool, name string, m mount) error {
-	delContainer(name)
-	return run.Run3(quiet, "docker", "run", "-it",
+	_ = delContainer(name)
+	return run.Exec3(quiet, "docker", "run", "-it",
 		"-v", fmt.Sprintf("%s:/app/downloads", m.downloads),
 		"-v", fmt.Sprintf("%s:/app/session", m.session),
 		"-d", "--network", "host", "--name", name,
@@ -104,7 +104,7 @@ func deploy() {
 	}
 }
 
-func print_usage() {
+func printUsage() {
 	usage := `Usage:
 %[1]s	download purge
 %[1]s	download list
@@ -117,8 +117,7 @@ func print_usage() {
 
 Flags:
 `
-	fmt.Fprintf(os.Stderr, usage,
-		os.Args[0])
+	log.Printf(usage, os.Args[0])
 	flag.PrintDefaults()
 	os.Exit(1)
 }
@@ -134,14 +133,14 @@ func (i *arrayTags) Set(value string) error {
 	return nil
 }
 
-func build_search() search.Search {
+func buildSearch() search.Search {
 	s := search.Search{
 		Season:  1,
 		Episode: 1,
 	}
 	s.Title = flag.Arg(2)
 	if len(s.Title) == 0 {
-		print_usage()
+		printUsage()
 	}
 	if len(flag.Arg(3)) > 0 {
 		s.Season = download.Str2Int(flag.Arg(3), -1)
@@ -149,7 +148,7 @@ func build_search() search.Search {
 			s.Episode = download.Str2Int(flag.Arg(4), -1)
 		}
 		if s.Season == -1 || s.Episode == -1 {
-			print_usage()
+			printUsage()
 		}
 		s.Type = search.TV
 	}
@@ -171,11 +170,11 @@ func main() {
 
 	switch flag.Arg(0) {
 	default:
-		print_usage()
+		printUsage()
 	case "download":
 		switch flag.Arg(1) {
 		default:
-			print_usage()
+			printUsage()
 		case "purge":
 		case "list":
 			ListAllDownloads(r)
@@ -184,26 +183,26 @@ func main() {
 	case "search":
 		switch flag.Arg(1) {
 		default:
-			print_usage()
+			printUsage()
 		case "find":
 		case "get":
 		}
 	case "find":
 		switch flag.Arg(1) {
 		default:
-			print_usage()
+			printUsage()
 		case "first":
-			m := FindFirstB(r, build_search(), tags)
+			m := FindFirstB(r, buildSearch(), tags)
 			fmt.Println(m.String())
 		case "all":
-			ListB(r, build_search(), tags)
+			ListB(r, buildSearch(), tags)
 		}
 	case "get":
 		switch flag.Arg(1) {
 		default:
-			print_usage()
+			printUsage()
 		case "first":
-			m := FindFirstB(r, build_search(), tags)
+			m := FindFirstB(r, buildSearch(), tags)
 			fmt.Println(m.String())
 			m.Get(r)
 		case "all":
@@ -211,7 +210,7 @@ func main() {
 	case "del":
 		switch flag.Arg(1) {
 		default:
-			print_usage()
+			printUsage()
 		case "first":
 		case "all":
 		}

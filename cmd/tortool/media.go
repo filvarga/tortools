@@ -118,8 +118,8 @@ func ListA(r download.Rtorrent, s search.Search) {
 	}
 }
 
-func ListB(r download.Rtorrent, s search.Search, substrs []string) {
-	for _, m := range FindB(r, s, substrs) {
+func ListB(r download.Rtorrent, s search.Search, tags []string) {
+	for _, m := range FindB(r, s, tags) {
 		fmt.Println(m.String())
 	}
 }
@@ -143,10 +143,10 @@ func FindA(r download.Rtorrent, s search.Search) Medias {
 	return ms
 }
 
-func FindB(r download.Rtorrent, s search.Search, substrs []string) Medias {
+func FindB(r download.Rtorrent, s search.Search, tags []string) Medias {
 	var ms Medias
 	for _, m := range FindA(r, s) {
-		if contains(m.Name, substrs) {
+		if contains(m.Name, tags) {
 			ms = append(ms, m)
 		}
 	}
@@ -165,15 +165,15 @@ func FindFirstA(r download.Rtorrent, s search.Search) *Media {
 	return nil
 }
 
-func FindFirstB(r download.Rtorrent, s search.Search, substrs []string) *Media {
-	if len(substrs) > 0 {
+func FindFirstB(r download.Rtorrent, s search.Search, tags []string) *Media {
+	if len(tags) > 0 {
 		for _, m := range convertDownloads(findDownloads(r, s)) {
-			if contains(m.Name, substrs) {
+			if contains(m.Name, tags) {
 				return &m
 			}
 		}
 		for _, m := range convertTorrents(findTorrents(s)) {
-			if contains(m.Name, substrs) {
+			if contains(m.Name, tags) {
 				return &m
 			}
 		}
@@ -183,9 +183,9 @@ func FindFirstB(r download.Rtorrent, s search.Search, substrs []string) *Media {
 	return nil
 }
 
-func contains(s string, substrs []string) bool {
+func contains(s string, tags []string) bool {
 	s = strings.ToLower(s)
-	for _, substr := range substrs {
+	for _, substr := range tags {
 		if !strings.Contains(s, substr) {
 			return false
 		}

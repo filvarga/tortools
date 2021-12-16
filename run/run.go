@@ -22,7 +22,7 @@ import (
 	"syscall"
 )
 
-func run1(cmd exec.Cmd) error {
+func exec1(cmd exec.Cmd) error {
 	err := cmd.Run()
 	if err == nil {
 		ws := cmd.ProcessState.Sys().(syscall.WaitStatus)
@@ -34,7 +34,7 @@ func run1(cmd exec.Cmd) error {
 	return err
 }
 
-func run2(cmd exec.Cmd) ([]byte, error) {
+func exec2(cmd exec.Cmd) ([]byte, error) {
 	output, err := cmd.CombinedOutput()
 	if err == nil {
 		ws := cmd.ProcessState.Sys().(syscall.WaitStatus)
@@ -46,21 +46,21 @@ func run2(cmd exec.Cmd) ([]byte, error) {
 	return output, err
 }
 
-func Run1(command string, args ...string) error {
-	return run1(*exec.Command(command, args...))
+func Exec1(command string, args ...string) error {
+	return exec1(*exec.Command(command, args...))
 }
 
-func Run2(command string, args ...string) ([]byte, error) {
-	return run2(*exec.Command(command, args...))
+func Exec2(command string, args ...string) ([]byte, error) {
+	return exec2(*exec.Command(command, args...))
 }
 
-func Run3(quiet bool, command string, args ...string) error {
+func Exec3(quiet bool, command string, args ...string) error {
 	cmd := exec.Command(command, args...)
 	if quiet == false {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 	}
-	return run1(*cmd)
+	return exec1(*cmd)
 }
 
 /* vim: set ts=2: */

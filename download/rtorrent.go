@@ -44,7 +44,7 @@ func (r *Rtorrent) getInt64Value(field string) int {
 		value  int
 	)
 
-	output, err = run.Run2("xmlrpc", r.url(), field)
+	output, err = run.Exec2("xmlrpc", r.url(), field)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -69,7 +69,7 @@ func (r *Rtorrent) GetDownloads() Downloads {
 
 	var downloads []Download
 
-	output, err := run.Run2("xmlrpc", r.url(), "download_list")
+	output, err := run.Exec2("xmlrpc", r.url(), "download_list")
 	if err != nil {
 		log.Fatal("error getting xmlrpc result")
 	}
@@ -93,7 +93,7 @@ func (r *Rtorrent) GetDownloads() Downloads {
 func (r *Rtorrent) TryCreateDownload(magnet string) bool {
 	var value int
 
-	output, err := run.Run2("xmlrpc", r.url(), "load.start", "", magnet)
+	output, err := run.Exec2("xmlrpc", r.url(), "load.start", "", magnet)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -129,7 +129,7 @@ func diffDownloads(dn Downloads, do Downloads) Downloads {
 
 func (r *Rtorrent) AddDownload(magnet string) *Download {
 
-	// this isn't bulet proof, if for instance some other
+	// this isn't bulletproof, if for instance some other
 	// tool or rtorrent (from watch dir) itself adds
 	// torrent
 
@@ -230,7 +230,7 @@ func getStrValue(b []byte) (string, error) {
 			return string(group), nil
 		}
 	}
-	return "", fmt.Errorf("Command failed, invalid value returned")
+	return "", fmt.Errorf("command failed, invalid value returned")
 }
 
 func getIntValue(b []byte) (int, error) {
@@ -247,7 +247,7 @@ func getIntValue(b []byte) (int, error) {
 			}
 		}
 	}
-	return 0, fmt.Errorf("Command failed, invalid value returned")
+	return 0, fmt.Errorf("command failed, invalid value returned")
 }
 
 func getInt64Value(b []byte) (int, error) {
@@ -264,7 +264,7 @@ func getInt64Value(b []byte) (int, error) {
 			}
 		}
 	}
-	return 0, fmt.Errorf("Command failed, invalid value returned")
+	return 0, fmt.Errorf("command failed, invalid value returned")
 }
 
 func (d *Download) getStrValue(field string) string {
@@ -274,7 +274,7 @@ func (d *Download) getStrValue(field string) string {
 		value  string
 	)
 
-	output, err = run.Run2("xmlrpc", d.r.url(), field, d.hash)
+	output, err = run.Exec2("xmlrpc", d.r.url(), field, d.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -294,7 +294,7 @@ func (d *Download) getIntValue(field string) int {
 		value  int
 	)
 
-	output, err = run.Run2("xmlrpc", d.r.url(), field, d.hash)
+	output, err = run.Exec2("xmlrpc", d.r.url(), field, d.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -314,7 +314,7 @@ func (d *Download) getInt64Value(field string) int {
 		value  int
 	)
 
-	output, err = run.Run2("xmlrpc", d.r.url(), field, d.hash)
+	output, err = run.Exec2("xmlrpc", d.r.url(), field, d.hash)
 	if err != nil {
 		log.Fatal(err)
 	}
