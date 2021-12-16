@@ -17,16 +17,14 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"github.com/filvarga/tortools/download"
+	"github.com/filvarga/tortools/search"
 	"log"
 	"os"
 	"strings"
-
-	"github.com/filvarga/tortools/download"
-	"github.com/filvarga/tortools/run"
-	"github.com/filvarga/tortools/search"
 )
 
+/* TODO: infrastructure installation and configuration
 var (
 	context = ""
 )
@@ -103,6 +101,7 @@ func deploy() {
 		log.Fatal(err)
 	}
 }
+*/
 
 func printUsage() {
 	usage := `Usage:
