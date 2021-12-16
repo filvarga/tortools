@@ -17,9 +17,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/filvarga/tortools/download"
 	"github.com/filvarga/tortools/search"
-	"log"
 	"os"
 	"strings"
 )
@@ -116,7 +116,8 @@ func printUsage() {
 
 Flags:
 `
-	log.Printf(usage, os.Args[0])
+	_, err := os.Stderr.WriteString(fmt.Sprintf(usage, os.Args[0]))
+	_ = err
 	flag.PrintDefaults()
 	os.Exit(1)
 }
