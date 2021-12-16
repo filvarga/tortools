@@ -1,7 +1,7 @@
 # vim: set ts=2:
 GO_CMD=go
-GO_INSTALL=$(GOCMD) install
-GO_BUILD=$(GOCMD) build
+GO_INSTALL=$(GO_CMD) install
+GO_BUILD=$(GO_CMD) build
 
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
