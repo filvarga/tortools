@@ -28,7 +28,7 @@ func exec1(cmd exec.Cmd) error {
 		ws := cmd.ProcessState.Sys().(syscall.WaitStatus)
 		es := ws.ExitStatus()
 		if es != 0 {
-			err = fmt.Errorf("Command failed, exit status %d is non zero", es)
+			err = fmt.Errorf("command failed, exit status %d is non zero", es)
 		}
 	}
 	return err
@@ -40,7 +40,7 @@ func exec2(cmd exec.Cmd) ([]byte, error) {
 		ws := cmd.ProcessState.Sys().(syscall.WaitStatus)
 		es := ws.ExitStatus()
 		if es != 0 {
-			err = fmt.Errorf("Command failed, exit status %d is non zero", es)
+			err = fmt.Errorf("command failed, exit status %d is non zero", es)
 		}
 	}
 	return output, err
